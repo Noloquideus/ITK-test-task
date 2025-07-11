@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Path, status, Depends, HTTPException, Body
+from fastapi import APIRouter, Path, status, Depends, HTTPException
 from fastapi.params import Query
 from src.application.contracts import IWalletService
 from src.application.domain.operation_type import Operation
@@ -6,6 +6,13 @@ from src.application.services import get_wallet_service
 from src.infrastructure.database.models.wallet import Wallet
 from src.infrastructure.logger import get_logger, Logger
 from src.presentation.schemas.wallet import WalletSchema
+from src.application.exceptions import (
+    WalletNotFoundError,
+    InsufficientFundsError,
+    InvalidAmountError,
+    InvalidWalletIdError,
+    DatabaseError
+)
 
 
 wallets_router = APIRouter(prefix='/wallets', tags=['wallets'])
@@ -17,18 +24,16 @@ async def create_wallet(
         wallet_service: IWalletService = Depends(get_wallet_service)
 ):
     try:
-        _trace_id = logger.get_trace_id()
-
         wallet: Wallet = await wallet_service.create()
         logger.info(f'Wallet created: {wallet.id}')
         return WalletSchema(id=str(wallet.id), balance=wallet.balance)
 
+    except DatabaseError as e:
+        logger.error(f'Database error during wallet creation: {e}')
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Database operation failed')
     except Exception as e:
-        logger.error(f'Wallet creation failed: {e}')
-        raise HTTPException(status_code=404, detail='Wallet creation failed')
-
-    finally:
-        logger.clear_trace_id()
+        logger.error(f'Unexpected error during wallet creation: {e}')
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Internal server error')
 
 
 @wallets_router.post(path='/{wallet_id}/operation', status_code=status.HTTP_201_CREATED, response_model=WalletSchema)
@@ -39,24 +44,40 @@ async def wallet_operation(
         logger: Logger = Depends(get_logger),
         wallet_service: IWalletService = Depends(get_wallet_service)
 ):
-    operation = {
-        Operation.DEPOSIT.value: wallet_service.deposit,
-        Operation.WITHDRAW.value: wallet_service.withdraw,
-    }
-
     try:
-        _trace_id = logger.get_trace_id()
+        if operation_type == Operation.DEPOSIT:
+            wallet: Wallet = await wallet_service.deposit(wallet_id, amount)
+        elif operation_type == Operation.WITHDRAW:
+            wallet = await wallet_service.withdraw(wallet_id, amount)
+        else:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid operation type')
 
-        wallet: Wallet = await operation[operation_type](wallet_id=wallet_id, amount=amount)
-        logger.info(f'Wallet operation: {wallet.id}')
+        logger.info(f'Operation {operation_type.value} completed for wallet {wallet_id}')
         return WalletSchema(id=str(wallet.id), balance=wallet.balance)
 
-    except Exception as e:
-        logger.error(f'Wallet retrieved failed: {e}')
-        raise HTTPException(status_code=404, detail='Wallet not wound')
+    except InvalidWalletIdError as e:
+        logger.error(f'Invalid wallet ID: {e}')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-    finally:
-        logger.clear_trace_id()
+    except WalletNotFoundError as e:
+        logger.error(f'Wallet not found: {e}')
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+    except InvalidAmountError as e:
+        logger.error(f'Invalid amount: {e}')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+    except InsufficientFundsError as e:
+        logger.error(f'Insufficient funds: {e}')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+    except DatabaseError as e:
+        logger.error(f'Database error: {e}')
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Database operation failed')
+
+    except Exception as e:
+        logger.error(f'Unexpected error: {e}')
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Internal server error')
 
 
 
@@ -67,15 +88,22 @@ async def get_wallet(
         wallet_service: IWalletService = Depends(get_wallet_service)
 ):
     try:
-        _trace_id = logger.get_trace_id()
-
         wallet: Wallet = await wallet_service.get_wallet(wallet_id=wallet_id)
         logger.info(f'Wallet retrieved: {wallet.id}')
         return WalletSchema(id=str(wallet.id), balance=wallet.balance)
 
-    except Exception as e:
-        logger.error(f'Wallet retrieved failed: {e}')
-        raise HTTPException(status_code=404, detail='Wallet not wound')
+    except InvalidWalletIdError as e:
+        logger.error(f'Invalid wallet ID: {e}')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-    finally:
-        logger.clear_trace_id()
+    except WalletNotFoundError as e:
+        logger.error(f'Wallet not found: {e}')
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+    except DatabaseError as e:
+        logger.error(f'Database error: {e}')
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Database operation failed')
+
+    except Exception as e:
+        logger.error(f'Unexpected error: {e}')
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Internal server error')

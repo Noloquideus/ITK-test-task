@@ -6,6 +6,22 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from src.infrastructure.logger import logger
 from src.presentation.middleware.trace_id import TraceIDMiddleware
 from src.presentation.routing.wallet_router import wallets_router
+from src.presentation.exception_handlers import (
+    wallet_not_found_handler,
+    insufficient_funds_handler,
+    invalid_amount_handler,
+    invalid_wallet_id_handler,
+    database_error_handler,
+    wallet_error_handler
+)
+from src.application.exceptions import (
+    WalletNotFoundError,
+    InsufficientFundsError,
+    InvalidAmountError,
+    InvalidWalletIdError,
+    DatabaseError,
+    WalletError
+)
 from src.settings import settings
 
 
@@ -50,6 +66,14 @@ app.include_router(app_router)
 
 # Added middleware
 app.add_middleware(TraceIDMiddleware, logger=logger)
+
+# Register exception handlers
+app.add_exception_handler(WalletNotFoundError, wallet_not_found_handler)
+app.add_exception_handler(InsufficientFundsError, insufficient_funds_handler)
+app.add_exception_handler(InvalidAmountError, invalid_amount_handler)
+app.add_exception_handler(InvalidWalletIdError, invalid_wallet_id_handler)
+app.add_exception_handler(DatabaseError, database_error_handler)
+app.add_exception_handler(WalletError, wallet_error_handler)
 
 @app.get('/docs', include_in_schema=False)
 async def custom_swagger_ui_html(_credentials: HTTPBasicCredentials = Depends(verify_credentials)):
