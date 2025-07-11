@@ -1,0 +1,49 @@
+services:
+  api:
+    build: .
+    container_name: itk_test_task
+    image: itk_test_task:v1.0
+    labels:
+      app_name: "ITK-test-task"
+    ports:
+      - "${APP_PORT:-9000}:9000"
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    env_file:
+      - .env
+    environment:
+      - DATABASE_HOST=${DATABASE_HOST}
+      - DATABASE_PORT=${DATABASE_PORT}
+      - DATABASE_NAME=${DATABASE_NAME}
+      - DATABASE_USER=${DATABASE_USER}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+    command: sh -c 'sleep 5 && alembic upgrade head && granian --interface asgi --host 0.0.0.0 --port 9000 --workers 4 src.main:app'
+    networks:
+      - app_network
+    depends_on:
+      - postgres
+
+  postgres:
+    container_name: postgres
+    image: postgres:17
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_DB=${DATABASE_NAME}
+    ports:
+      - "${DATABASE_PORT}:5432"
+    volumes:
+      - postgres_data:/postgres_data
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+

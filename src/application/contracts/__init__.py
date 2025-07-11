@@ -1,0 +1,1 @@
+from src.application.contracts.i_wallet_service import IWalletService
