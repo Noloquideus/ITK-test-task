@@ -21,11 +21,17 @@ class WalletService(IWalletService):
             self._logger.error(f'Wallet creation failed: {e}')
             raise e
 
-    async def deposit(self, wallet_id: str, value: float) -> Wallet:
-        pass
+    async def deposit(self, wallet_id: str, amount: float) -> Wallet:
+        self._logger.info(f'Depositing {amount} to wallet {wallet_id}')
+        wallet = await self._wallet_repository.deposit(wallet_id, amount)
+        self._logger.info(f'Deposit successful: wallet {wallet.id}, new balance: {wallet.balance}')
+        return wallet
 
-    async def withdraw(self, wallet_id: str, value: float) -> Wallet:
-        pass
+    async def withdraw(self, wallet_id: str, amount: float) -> Wallet:
+        self._logger.info(f'Withdrawing {amount} from wallet {wallet_id}')
+        wallet = await self._wallet_repository.withdraw(wallet_id, amount)
+        self._logger.info(f'Withdraw successful: wallet {wallet.id}, new balance: {wallet.balance}')
+        return wallet
 
     async def get_wallet(self, wallet_id: str) -> Wallet:
         try:
