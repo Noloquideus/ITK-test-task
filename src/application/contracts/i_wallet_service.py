@@ -9,11 +9,11 @@ class IWalletService(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def deposit(self, wallet_id: str, value: float) -> Wallet:
+    async def deposit(self, wallet_id: str, amount: float) -> Wallet:
         raise NotImplementedError
 
     @abstractmethod
-    async def withdraw(self, wallet_id: str, value: float) -> Wallet:
+    async def withdraw(self, wallet_id: str, amount: float) -> Wallet:
         raise NotImplementedError
 
     @abstractmethod
