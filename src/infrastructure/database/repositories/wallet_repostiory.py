@@ -1,5 +1,6 @@
 import uuid
 from contextlib import asynccontextmanager
+from decimal import Decimal
 from sqlalchemy import select
 from src.application.abstractions import IWalletRepository
 from src.infrastructure.database.models.wallet import Wallet
@@ -32,7 +33,7 @@ class WalletRepository(IWalletRepository):
             DatabaseError: If wallet creation fails
         """
         try:
-            wallet = Wallet(balance=0.0)
+            wallet = Wallet(balance=Decimal('0.00'))
             self._session.add(wallet)
             await self._session.commit()
             await self._session.refresh(wallet)
@@ -77,7 +78,7 @@ class WalletRepository(IWalletRepository):
             pass
 
 
-    async def deposit(self, wallet_id: str, amount: float) -> Wallet:
+    async def deposit(self, wallet_id: str, amount: Decimal) -> Wallet:
         """
         Deposit money into a wallet.
 
@@ -118,7 +119,7 @@ class WalletRepository(IWalletRepository):
             raise DatabaseError(f'Deposit operation failed: {e}')
 
 
-    async def withdraw(self, wallet_id: str, amount: float) -> Wallet:
+    async def withdraw(self, wallet_id: str, amount: Decimal) -> Wallet:
         """
         Withdraw money from a wallet.
 

@@ -1,3 +1,4 @@
+from decimal import Decimal
 from src.application.abstractions.i_wallet_repository import IWalletRepository
 from src.application.contracts.i_wallet_service import IWalletService
 from src.infrastructure.database.models.wallet import Wallet
@@ -23,6 +24,7 @@ class WalletService(IWalletService):
         self._wallet_repository = wallet_repository
         self._logger = logger
 
+
     async def create(self) -> Wallet:
         """
         Create a new wallet with zero balance.
@@ -39,7 +41,7 @@ class WalletService(IWalletService):
             self._logger.error(f'Wallet creation failed: {e}')
             raise e
 
-    async def deposit(self, wallet_id: str, amount: float) -> Wallet:
+    async def deposit(self, wallet_id: str, amount: Decimal) -> Wallet:
         """
         Deposit money into a wallet.
 
@@ -55,7 +57,7 @@ class WalletService(IWalletService):
         self._logger.info(f'Deposit successful: wallet {wallet.id}, new balance: {wallet.balance}')
         return wallet
 
-    async def withdraw(self, wallet_id: str, amount: float) -> Wallet:
+    async def withdraw(self, wallet_id: str, amount: Decimal) -> Wallet:
         """
         Withdraw money from a wallet.
 

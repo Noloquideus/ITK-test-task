@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from decimal import Decimal
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.application.contracts.i_wallet_service import IWalletService
 from src.infrastructure.database.models.wallet import Wallet
@@ -17,11 +18,11 @@ class IWalletRepository(IWalletService):
         raise NotImplementedError
 
     @abstractmethod
-    async def deposit(self, wallet_id: str, amount: float) -> Wallet:
+    async def deposit(self, wallet_id: str, amount: Decimal) -> Wallet:
         raise NotImplementedError
 
     @abstractmethod
-    async def withdraw(self, wallet_id: str, amount: float) -> Wallet:
+    async def withdraw(self, wallet_id: str, amount: Decimal) -> Wallet:
         raise NotImplementedError
 
     @abstractmethod

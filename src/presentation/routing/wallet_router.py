@@ -1,3 +1,4 @@
+from decimal import Decimal
 from fastapi import APIRouter, Path, status, Depends, HTTPException
 from fastapi.params import Query
 from src.application.contracts import IWalletService
@@ -72,10 +73,13 @@ async def wallet_operation(
         HTTPException: If the operation fails for any reason
     """
     try:
+        # Convert float to Decimal for precise arithmetic
+        amount_decimal = Decimal(str(amount))
+        
         if operation_type == Operation.DEPOSIT:
-            wallet: Wallet = await wallet_service.deposit(wallet_id, amount)
+            wallet: Wallet = await wallet_service.deposit(wallet_id, amount_decimal)
         elif operation_type == Operation.WITHDRAW:
-            wallet = await wallet_service.withdraw(wallet_id, amount)
+            wallet = await wallet_service.withdraw(wallet_id, amount_decimal)
         else:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid operation type')
 
@@ -105,7 +109,6 @@ async def wallet_operation(
     except Exception as e:
         logger.error(f'Unexpected error: {e}')
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Internal server error')
-
 
 
 @wallets_router.get(path='/{wallet_id}', status_code=status.HTTP_200_OK, response_model=WalletSchema)

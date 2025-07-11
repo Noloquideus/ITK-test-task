@@ -1,7 +1,8 @@
 import uuid
+from decimal import Decimal
 from uuid import uuid4
 from datetime import datetime, UTC
-from sqlalchemy import DateTime, Float
+from sqlalchemy import DateTime, Numeric
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID
 from src.infrastructure.database.models.base import Base
@@ -28,8 +29,9 @@ class Wallet(Base):
         comment='Wallet ID'
     )
 
-    balance: Mapped[float] = mapped_column(
-        Float,
+    balance: Mapped[Decimal] = mapped_column(
+        Numeric(scale=2),
+        default=Decimal('0.00'),
         comment='Wallet balance'
     )
 
