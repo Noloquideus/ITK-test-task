@@ -1,0 +1,1 @@
+from src.application.abstractions.i_wallet_repository import IWalletRepository
