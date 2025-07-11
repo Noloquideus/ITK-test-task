@@ -1,5 +1,5 @@
 from decimal import Decimal
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_serializer
 
 
 class WalletSchema(BaseModel):
@@ -14,8 +14,10 @@ class WalletSchema(BaseModel):
     balance: Decimal
 
     model_config = ConfigDict(
-        arbitrary_types_allowed=True,
-        json_encoders={
-            Decimal: lambda v: str(v)
-        }
+        arbitrary_types_allowed=True
     )
+
+    @field_serializer('balance')
+    def serialize_balance(self, value: Decimal) -> str:
+        """Serialize Decimal balance to string."""
+        return str(value)
