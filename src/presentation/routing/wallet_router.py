@@ -23,6 +23,17 @@ async def create_wallet(
         logger: Logger = Depends(get_logger),
         wallet_service: IWalletService = Depends(get_wallet_service)
 ):
+    """
+    Create a new wallet.
+
+    Creates a new wallet with zero balance and returns the wallet information.
+
+    Returns:
+        WalletSchema: The created wallet information
+
+    Raises:
+        HTTPException: If wallet creation fails
+    """
     try:
         wallet: Wallet = await wallet_service.create()
         logger.info(f'Wallet created: {wallet.id}')
@@ -44,6 +55,22 @@ async def wallet_operation(
         logger: Logger = Depends(get_logger),
         wallet_service: IWalletService = Depends(get_wallet_service)
 ):
+    """
+    Perform a wallet operation (deposit or withdraw).
+
+    Executes a deposit or withdrawal operation on the specified wallet.
+
+    Args:
+        wallet_id: The wallet ID to perform the operation on
+        amount: The amount for the operation (must be positive)
+        operation_type: The type of operation (DEPOSIT or WITHDRAW)
+
+    Returns:
+        WalletSchema: The updated wallet information
+
+    Raises:
+        HTTPException: If the operation fails for any reason
+    """
     try:
         if operation_type == Operation.DEPOSIT:
             wallet: Wallet = await wallet_service.deposit(wallet_id, amount)
@@ -87,6 +114,20 @@ async def get_wallet(
         logger: Logger = Depends(get_logger),
         wallet_service: IWalletService = Depends(get_wallet_service)
 ):
+    """
+    Get wallet information by ID.
+
+    Retrieves and returns the wallet information including balance and creation date.
+
+    Args:
+        wallet_id: The wallet ID to retrieve
+
+    Returns:
+        WalletSchema: The wallet information
+
+    Raises:
+        HTTPException: If the wallet is not found or other errors occur
+    """
     try:
         wallet: Wallet = await wallet_service.get_wallet(wallet_id=wallet_id)
         logger.info(f'Wallet retrieved: {wallet.id}')

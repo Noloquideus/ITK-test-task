@@ -27,6 +27,11 @@ from src.settings import settings
 
 @asynccontextmanager
 async def lifespan(_application: FastAPI) -> AsyncGenerator:
+    """
+    Application lifespan manager.
+
+    Handles application startup and shutdown events with proper logging.
+    """
     logger.info('API Started')
     yield
     logger.info('API Stopped')
@@ -51,7 +56,13 @@ security = HTTPBasic(description='Basic Authentication for AndNowIT API')
 # Function to verify user credentials
 async def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)):
     """
-    Validates the user's credentials using a hashed password.
+    Validate user credentials for API documentation access.
+
+    Args:
+        credentials: HTTP Basic authentication credentials
+
+    Raises:
+        HTTPException: If credentials are invalid
     """
     correct_username = settings.DOCS_USERNAME  # Username
     correct_password = settings.DOCS_PASSWORD  # Password hash
@@ -78,7 +89,10 @@ app.add_exception_handler(WalletError, wallet_error_handler)
 @app.get('/docs', include_in_schema=False)
 async def custom_swagger_ui_html(_credentials: HTTPBasicCredentials = Depends(verify_credentials)):
     """
-    Custom Swagger documentation, protected with basic authentication.
+    Serve custom Swagger UI documentation with authentication.
+
+    Returns:
+        HTMLResponse: Swagger UI interface
     """
     return get_swagger_ui_html(
         openapi_url=getattr(app, 'openapi_url', '/openapi.json'),
@@ -91,7 +105,10 @@ async def custom_swagger_ui_html(_credentials: HTTPBasicCredentials = Depends(ve
 @app.get('/redoc', include_in_schema=False)
 async def custom_redoc_html(_credentials: HTTPBasicCredentials = Depends(verify_credentials)):
     """
-    Custom ReDoc documentation, protected with basic authentication.
+    Serve custom ReDoc documentation with authentication.
+
+    Returns:
+        HTMLResponse: ReDoc interface
     """
     return get_redoc_html(
         openapi_url=getattr(app, 'openapi_url', '/openapi.json'),
@@ -103,5 +120,8 @@ async def custom_redoc_html(_credentials: HTTPBasicCredentials = Depends(verify_
 async def ping():
     """
     Health check endpoint to verify API is running.
+
+    Returns:
+        dict: Simple health status response
     """
     return {'message': 'pong', 'status': 'ok'}

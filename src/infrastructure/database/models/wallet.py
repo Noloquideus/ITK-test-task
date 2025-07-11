@@ -8,6 +8,16 @@ from src.infrastructure.database.models.base import Base
 
 
 class Wallet(Base):
+    """
+    Wallet database model.
+
+    Represents a wallet entity with balance tracking and creation timestamp.
+
+    Attributes:
+        id: Unique identifier for the wallet (UUID)
+        balance: Current balance of the wallet
+        created_at: Timestamp when the wallet was created
+    """
     __tablename__ = 'wallets'
 
     id: Mapped[uuid.UUID] = mapped_column(
