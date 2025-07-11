@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Path, status, Depends, HTTPException
+from fastapi import APIRouter, Path, status, Depends, HTTPException, Body
+from fastapi.params import Query
 from src.application.contracts import IWalletService
 from src.application.domain.operation_type import Operation
 from src.application.services import get_wallet_service
@@ -33,11 +34,30 @@ async def create_wallet(
 @wallets_router.post(path='/{wallet_id}/operation', status_code=status.HTTP_201_CREATED, response_model=WalletSchema)
 async def wallet_operation(
         wallet_id: str = Path(title='Wallet ID'),
-        operation: Operation = Path(title='Operation'),
+        amount: float = Query(title='Amount'),
+        operation_type: Operation = Query(title='Operation'),
         logger: Logger = Depends(get_logger),
         wallet_service: IWalletService = Depends(get_wallet_service)
 ):
-    pass
+    operation = {
+        Operation.DEPOSIT.value: wallet_service.deposit,
+        Operation.WITHDRAW.value: wallet_service.withdraw,
+    }
+
+    try:
+        _trace_id = logger.get_trace_id()
+
+        wallet: Wallet = await operation[operation_type](wallet_id=wallet_id, amount=amount)
+        logger.info(f'Wallet operation: {wallet.id}')
+        return WalletSchema(id=str(wallet.id), balance=wallet.balance)
+
+    except Exception as e:
+        logger.error(f'Wallet retrieved failed: {e}')
+        raise HTTPException(status_code=404, detail='Wallet not wound')
+
+    finally:
+        logger.clear_trace_id()
+
 
 
 @wallets_router.get(path='/{wallet_id}', status_code=status.HTTP_200_OK, response_model=WalletSchema)
