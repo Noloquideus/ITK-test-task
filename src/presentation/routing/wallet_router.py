@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from fastapi import APIRouter, Path, status, Depends, HTTPException
 from fastapi.params import Query
 from src.application.contracts import IWalletService
@@ -51,7 +51,7 @@ async def create_wallet(
 @wallets_router.post(path='/{wallet_id}/operation', status_code=status.HTTP_201_CREATED, response_model=WalletSchema)
 async def wallet_operation(
         wallet_id: str = Path(title='Wallet ID'),
-        amount: float = Query(title='Amount'),
+        amount: str = Query(title='Amount', description='Amount as decimal string (e.g., "100.50")'),
         operation_type: Operation = Query(title='Operation'),
         logger: Logger = Depends(get_logger),
         wallet_service: IWalletService = Depends(get_wallet_service)
@@ -63,7 +63,7 @@ async def wallet_operation(
 
     Args:
         wallet_id: The wallet ID to perform the operation on
-        amount: The amount for the operation (must be positive)
+        amount: The amount for the operation as decimal string (must be positive)
         operation_type: The type of operation (DEPOSIT or WITHDRAW)
 
     Returns:
@@ -73,8 +73,13 @@ async def wallet_operation(
         HTTPException: If the operation fails for any reason
     """
     try:
-        # Convert float to Decimal for precise arithmetic
-        amount_decimal = Decimal(str(amount))
+        # Validate and convert amount string to Decimal
+        try:
+            amount_decimal = Decimal(amount)
+            if amount_decimal <= 0:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Amount must be positive')
+        except (InvalidOperation, ValueError):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid amount format')
         
         if operation_type == Operation.DEPOSIT:
             wallet: Wallet = await wallet_service.deposit(wallet_id, amount_decimal)
