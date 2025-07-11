@@ -1,3 +1,5 @@
+import uuid
+from sqlalchemy import select
 from src.application.abstractions import IWalletRepository
 from src.infrastructure.database.models.wallet import Wallet
 
@@ -25,4 +27,21 @@ class WalletRepository(IWalletRepository):
         pass
 
     async def get_wallet(self, wallet_id: str) -> Wallet:
-        pass
+
+        try:
+            wallet_uuid = uuid.UUID(wallet_id)
+        except ValueError:
+            self._logger.error(f'Invalid wallet ID: {wallet_id}')
+            raise ValueError(f'Invalid wallet ID format: {wallet_id}')
+
+        query = select(Wallet).where(Wallet.id == wallet_uuid)
+        result = await self._session.execute(query)
+        wallet = result.scalar_one_or_none()
+
+        if wallet is None:
+            self._logger.error(f'Wallet with ID {wallet_id} not found')
+            raise ValueError(f'Wallet with ID {wallet_id} not found')
+
+        self._logger.info(f'Wallet retrieved: {wallet.id}')
+        return wallet
+

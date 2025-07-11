@@ -28,4 +28,12 @@ class WalletService(IWalletService):
         pass
 
     async def get_wallet(self, wallet_id: str) -> Wallet:
-        pass
+        try:
+            self._logger.info(f'Get wallet with wallet_id - {wallet_id}')
+            wallet = await self._wallet_repository.get_wallet(wallet_id=wallet_id)
+            self._logger.info(f'Wallet get successfully: {wallet.id}')
+            return wallet
+
+        except Exception as e:
+            self._logger.error(f'Wallet creation failed: {e}')
+            raise e
