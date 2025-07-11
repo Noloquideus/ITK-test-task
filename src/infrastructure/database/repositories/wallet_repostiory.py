@@ -15,7 +15,7 @@ from src.application.exceptions import (
 class WalletRepository(IWalletRepository):
     """
     Repository implementation for wallet database operations.
-    
+
     Provides methods for creating, retrieving, and modifying wallet entities
     with proper transaction handling and concurrency control.
     """
@@ -24,10 +24,10 @@ class WalletRepository(IWalletRepository):
     async def create(self) -> Wallet:
         """
         Create a new wallet with zero balance.
-        
+
         Returns:
             Wallet: The created wallet entity
-            
+
         Raises:
             DatabaseError: If wallet creation fails
         """
@@ -48,13 +48,13 @@ class WalletRepository(IWalletRepository):
     async def _get_locked_wallet(self, wallet_id: str):
         """
         Get a wallet with row-level locking for concurrent operations.
-        
+
         Args:
             wallet_id: The wallet ID to retrieve
-            
+
         Yields:
             Wallet: The locked wallet entity
-            
+
         Raises:
             InvalidWalletIdError: If wallet ID format is invalid
             WalletNotFoundError: If wallet is not found
@@ -63,7 +63,7 @@ class WalletRepository(IWalletRepository):
             wallet_uuid = uuid.UUID(wallet_id)
         except ValueError:
             raise InvalidWalletIdError(f'Invalid wallet ID format: {wallet_id}')
-        
+
         query = select(Wallet).where(Wallet.id == wallet_uuid).with_for_update()
         result = await self._session.execute(query)
         wallet = result.scalar_one_or_none()
@@ -80,14 +80,14 @@ class WalletRepository(IWalletRepository):
     async def deposit(self, wallet_id: str, amount: float) -> Wallet:
         """
         Deposit money into a wallet.
-        
+
         Args:
             wallet_id: The wallet ID to deposit into
             amount: The amount to deposit (must be positive)
-            
+
         Returns:
             Wallet: The updated wallet entity
-            
+
         Raises:
             InvalidAmountError: If amount is not positive
             InvalidWalletIdError: If wallet ID format is invalid
@@ -121,14 +121,14 @@ class WalletRepository(IWalletRepository):
     async def withdraw(self, wallet_id: str, amount: float) -> Wallet:
         """
         Withdraw money from a wallet.
-        
+
         Args:
             wallet_id: The wallet ID to withdraw from
             amount: The amount to withdraw (must be positive)
-            
+
         Returns:
             Wallet: The updated wallet entity
-            
+
         Raises:
             InvalidAmountError: If amount is not positive
             InvalidWalletIdError: If wallet ID format is invalid
@@ -169,13 +169,13 @@ class WalletRepository(IWalletRepository):
     async def get_wallet(self, wallet_id: str) -> Wallet:
         """
         Retrieve a wallet by its ID.
-        
+
         Args:
             wallet_id: The wallet ID to retrieve
-            
+
         Returns:
             Wallet: The wallet entity
-            
+
         Raises:
             InvalidWalletIdError: If wallet ID format is invalid
             WalletNotFoundError: If wallet is not found

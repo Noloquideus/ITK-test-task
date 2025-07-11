@@ -7,7 +7,7 @@ from src.infrastructure.logger import Logger
 class WalletService(IWalletService):
     """
     Service layer for wallet operations.
-    
+
     Provides business logic for wallet creation, deposits, withdrawals,
     and retrieval operations with proper logging.
     """
@@ -15,7 +15,7 @@ class WalletService(IWalletService):
     def __init__(self, wallet_repository: IWalletRepository, logger: Logger):
         """
         Initialize the wallet service.
-        
+
         Args:
             wallet_repository: Repository for wallet data access
             logger: Logger instance for operation logging
@@ -23,11 +23,10 @@ class WalletService(IWalletService):
         self._wallet_repository = wallet_repository
         self._logger = logger
 
-
     async def create(self) -> Wallet:
         """
         Create a new wallet with zero balance.
-        
+
         Returns:
             Wallet: The created wallet entity
         """
@@ -43,11 +42,11 @@ class WalletService(IWalletService):
     async def deposit(self, wallet_id: str, amount: float) -> Wallet:
         """
         Deposit money into a wallet.
-        
+
         Args:
             wallet_id: The wallet ID to deposit into
             amount: The amount to deposit
-            
+
         Returns:
             Wallet: The updated wallet entity
         """
@@ -59,11 +58,11 @@ class WalletService(IWalletService):
     async def withdraw(self, wallet_id: str, amount: float) -> Wallet:
         """
         Withdraw money from a wallet.
-        
+
         Args:
             wallet_id: The wallet ID to withdraw from
             amount: The amount to withdraw
-            
+
         Returns:
             Wallet: The updated wallet entity
         """
@@ -75,10 +74,10 @@ class WalletService(IWalletService):
     async def get_wallet(self, wallet_id: str) -> Wallet:
         """
         Retrieve a wallet by its ID.
-        
+
         Args:
             wallet_id: The wallet ID to retrieve
-            
+
         Returns:
             Wallet: The wallet entity
         """
