@@ -12,10 +12,14 @@ class WalletService(IWalletService):
 
 
     async def create(self) -> Wallet:
-        self._logger.info('Creating new wallet')
-        wallet = await self._wallet_repository.create()
-        self._logger.info(f'Wallet created successfully: {wallet.id}')
-        return wallet
+        try:
+            self._logger.info('Creating new wallet')
+            wallet = await self._wallet_repository.create()
+            self._logger.info(f'Wallet created successfully: {wallet.id}')
+            return wallet
+        except Exception as e:
+            self._logger.error(f'Wallet creation failed: {e}')
+            raise e
 
     async def deposit(self, wallet_id: str, value: float) -> Wallet:
         pass

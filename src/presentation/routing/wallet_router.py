@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Path, status, Depends
+from fastapi import APIRouter, Path, status, Depends, HTTPException
 from src.application.contracts import IWalletService
 from src.application.domain.operation_type import Operation
 from src.application.services import get_wallet_service
@@ -15,9 +15,19 @@ async def create_wallet(
         logger: Logger = Depends(get_logger),
         wallet_service: IWalletService = Depends(get_wallet_service)
 ):
-    wallet: Wallet = await wallet_service.create()
-    logger.info(f'Wallet created: {wallet.id}')
-    return WalletSchema(id=str(wallet.id), balance=wallet.balance)
+    try:
+        trace_id = logger.get_trace_id()
+
+        wallet: Wallet = await wallet_service.create()
+        logger.info(f'Wallet created: {wallet.id}')
+        return WalletSchema(id=str(wallet.id), balance=wallet.balance)
+
+    except Exception as e:
+        logger.error(f'Wallet creation failed: {e}')
+        raise HTTPException(status_code=404, detail='Wallet creation failed')
+
+    finally:
+        logger.clear_trace_id()
 
 
 @wallets_router.post(path='/{wallet_id}/operation', status_code=status.HTTP_201_CREATED, response_model=WalletSchema)
