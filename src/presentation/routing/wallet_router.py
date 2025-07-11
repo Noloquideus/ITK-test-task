@@ -16,7 +16,7 @@ async def create_wallet(
         wallet_service: IWalletService = Depends(get_wallet_service)
 ):
     try:
-        trace_id = logger.get_trace_id()
+        _trace_id = logger.get_trace_id()
 
         wallet: Wallet = await wallet_service.create()
         logger.info(f'Wallet created: {wallet.id}')
@@ -46,4 +46,16 @@ async def get_wallet(
         logger: Logger = Depends(get_logger),
         wallet_service: IWalletService = Depends(get_wallet_service)
 ):
-    pass
+    try:
+        _trace_id = logger.get_trace_id()
+
+        wallet: Wallet = await wallet_service.get_wallet(wallet_id=wallet_id)
+        logger.info(f'Wallet retrieved: {wallet.id}')
+        return WalletSchema(id=str(wallet.id), balance=wallet.balance)
+
+    except Exception as e:
+        logger.error(f'Wallet retrieved failed: {e}')
+        raise HTTPException(status_code=404, detail='Wallet not wound')
+
+    finally:
+        logger.clear_trace_id()
